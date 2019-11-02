@@ -1,0 +1,74 @@
+;
+; DA1B_Yun.asm
+; KYUNGSEO YUN
+;
+
+.include <m328pdef.inc>
+
+.EQU STARTADDS = 0x200	
+.DEF ZERO = R2
+.ORG 0
+	LDI XL, LOW(STARTADDS)
+	LDI XH, HIGH(STARTADDS)
+	LDI YL, LOW(0X0300)
+	LDI YH, HIGH(0X0300)
+	LDI ZL, LOW(0X0500)
+	LDI ZH, HIGH(0X0500)
+	LDI R20, 0X0F 
+	LDI R21, 125
+
+POPULATE : //populate [STARTADDS] with random 250 numbers
+	ST X+, R20
+	ST X+, R20
+	INC R20
+	DEC R21
+	BRNE POPULATE 
+
+
+	LDI XL, LOW(STARTADDS)	//reset X pointer to STARTADDS
+	LDI XH, HIGH(STARTADDS) 
+	LDI R23, 250 //counter
+	CLR R20 //R20 = quotient
+	LDI R21, 5 //R21 = denominator = 5
+	
+DIVISION : 
+	LD R22, X //load number from X
+	CLR R20
+
+DIV_LOOP : //division loop
+	INC R20 //increase quotient
+	SUB R22, R21
+	BRCC DIV_LOOP
+	DEC R20
+	ADD R22, R21
+	BREQ DIVISIBLE
+	LD R22, X+ //if not divisible,
+	ST Z+, R22 //store into 0x500
+	INC R25
+	DEC R23 //decrease counter
+	BRNE DIVISION
+	JMP ADDITION1
+
+DIVISIBLE :
+	LD R22, X+ //if divisible, 
+	ST Y+, R22 //store into 0x300
+	INC R24
+	DEC R23 //decrease counter
+	BRNE DIVISION
+
+ADDITION1 : 
+	LD R20, -Y
+	ADD R16, R20
+	ADC R17, ZERO
+	DEC R24
+	BRNE ADDITION1
+
+ADDITION2 : 
+	LD R20, -Z
+	ADD R18, R20
+	ADC R19, ZERO
+	DEC R25
+	BRNE ADDITION2 
+
+DONE : JMP DONE
+	
